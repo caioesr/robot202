@@ -90,7 +90,7 @@ def roda_todo_frame(imagem):
         cv_image = saida_net.copy()
         cm = center_mass(low, high)
         mask = cm.filter_color(cv_image)
-        mask_bgr = cm.center_of_mass_region(mask, 20, 200, cv_image.shape[1] - 20, cv_image.shape[0]-100)
+        mask_bgr = cm.center_of_mass_region(mask, 20, 100, cv_image.shape[1] - 20, cv_image.shape[0] - 50)
         cv2.imshow("cv_image", mask_bgr)
         cv2.waitKey(1)
     except CvBridgeError as e:
