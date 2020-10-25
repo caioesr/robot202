@@ -24,6 +24,7 @@ from std_msgs.msg import Header
 
 import visao_module
 from center_mass import center_mass
+from tracker import tracker
 
 
 bridge = CvBridge()
@@ -35,6 +36,14 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
+
+v = 0.2
+w = math.pi/8
+
+tracker = tracker(v, w)
+cm_coords = None
+center_image = None
+angle = None
 
 area = 0.0 # Variavel com a area do maior contorno
 
@@ -60,11 +69,12 @@ tf_buffer = tf2_ros.Buffer()
 
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
-    print("frame")
     global cv_image
     global media
     global centro
     global resultados
+    global cm_coords
+    global center_image
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
@@ -88,9 +98,12 @@ def roda_todo_frame(imagem):
         depois = time.clock()
         # Desnecessário - Hough e MobileNet já abrem janelas
         cv_image = saida_net.copy()
+        center_image = tracker.get_center(cv_image)
         cm = center_mass(low, high)
         mask = cm.filter_color(cv_image)
+        cm_coords = cm.center_coords(mask)
         mask_bgr = cm.center_of_mass_region(mask, 20, 100, cv_image.shape[1] - 20, cv_image.shape[0] - 50)
+        tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
         cv2.imshow("cv_image", mask_bgr)
         cv2.waitKey(1)
     except CvBridgeError as e:
@@ -103,9 +116,6 @@ if __name__=="__main__":
 
     recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
 
-
-    print("Usando ", topico_imagem)
-
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
 
     tfl = tf2_ros.TransformListener(tf_buffer) #conversao do sistema de coordenadas 
@@ -115,13 +125,14 @@ if __name__=="__main__":
     # [('chair', 86.965459585189819, (90, 141), (177, 265))]
 
     try:
-        # Inicializando - por default gira no sentido anti-horário
-        # vel = Twist(Vector3(0,0,0), Vector3(0,0,math.pi/10.0))
         
         while not rospy.is_shutdown():
-            for r in resultados:
-                print(r)
-            #velocidade_saida.publish(vel)
+            # for r in resultados:
+            #     print(r)
+
+            if(center_image != None and cm_coords != None):
+                vel = tracker.get_velocity(center_image, cm_coords)
+                velocidade_saida.publish(vel)
 
             rospy.sleep(0.1)
 
