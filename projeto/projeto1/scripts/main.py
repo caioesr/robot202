@@ -23,6 +23,7 @@ from std_msgs.msg import Header
 
 
 import visao_module
+from center_mass import center_mass
 
 
 bridge = CvBridge()
@@ -32,6 +33,8 @@ media = []
 centro = []
 atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 
+low = np.array([22, 50, 50],dtype=np.uint8)
+high = np.array([36, 255, 255],dtype=np.uint8)
 
 area = 0.0 # Variavel com a area do maior contorno
 
@@ -85,7 +88,10 @@ def roda_todo_frame(imagem):
         depois = time.clock()
         # Desnecessário - Hough e MobileNet já abrem janelas
         cv_image = saida_net.copy()
-        cv2.imshow("cv_image", cv_image)
+        cm = center_mass(low, high)
+        mask = cm.filter_color(cv_image)
+        mask_bgr = cm.center_of_mass_region(mask, 20, 200, cv_image.shape[1] - 20, cv_image.shape[0]-100)
+        cv2.imshow("cv_image", mask_bgr)
         cv2.waitKey(1)
     except CvBridgeError as e:
         print('ex', e)
