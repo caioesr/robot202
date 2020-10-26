@@ -16,11 +16,11 @@ class tracker:
 
         return (x,y)
 
-    def get_angle(self, point, cm):
+    def get_diff(self, point, cm):
         x,y = point
         x_cm,y_cm = cm
-        angle = np.arctan(x - x_cm)
-        return angle
+        diff = x - x_cm
+        return diff
 
     def crosshair(self, img, point, size, color):
         """
@@ -31,15 +31,15 @@ class tracker:
         cv2.line(img,(x,y - size),(x, y + size),color,5)
 
     def get_velocity(self, point, cm):
-        angle = self.get_angle(point, cm)
-        print(angle)
-        if(angle > 0):
-            if(angle < 1.5):
+        diff = self.get_diff(point, cm)
+        print(diff)
+        if(diff > 0):
+            if(diff < 5):
                 return Twist(Vector3(self.vel_trans,0,0), Vector3(0,0,self.vel_rot))
             else:
                 return Twist(Vector3(0,0,0), Vector3(0,0,self.vel_rot))
         else:
-            if(angle > -1.5):
+            if(diff > -5):
                 return Twist(Vector3(self.vel_trans,0,0), Vector3(0,0,-self.vel_rot))
             else:
                 return Twist(Vector3(0,0,0), Vector3(0,0,-self.vel_rot))

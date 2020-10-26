@@ -43,7 +43,6 @@ w = math.pi/8
 tracker = tracker(v, w)
 cm_coords = None
 center_image = None
-angle = None
 
 area = 0.0 # Variavel com a area do maior contorno
 
@@ -134,7 +133,7 @@ if __name__=="__main__":
                 vel = tracker.get_velocity(center_image, cm_coords)
                 velocidade_saida.publish(vel)
 
-            rospy.sleep(0.1)
+            rospy.sleep(0.05)
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
