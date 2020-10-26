@@ -37,8 +37,8 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 0.2
-w = math.pi/8
+v = 0.1
+w = math.pi/16
 
 tracker = tracker(v, w)
 cm_coords = None
@@ -101,7 +101,7 @@ def roda_todo_frame(imagem):
         cm = center_mass(low, high)
         mask = cm.filter_color(cv_image)
         cm_coords = cm.center_coords(mask)
-        mask_bgr = cm.center_of_mass_region(mask, 20, 100, cv_image.shape[1] - 20, cv_image.shape[0] - 50)
+        mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
         tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
         cv2.imshow("cv_image", mask_bgr)
         cv2.waitKey(1)
@@ -133,7 +133,10 @@ if __name__=="__main__":
                 vel = tracker.get_velocity(center_image, cm_coords)
                 velocidade_saida.publish(vel)
 
-            rospy.sleep(0.05)
+            rospy.sleep(0.01)
+
+            stop_vel = Twist(Vector3(0, 0, 0), Vector3(0, 0 ,0))
+            velocidade_saida.publish(stop_vel)
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")

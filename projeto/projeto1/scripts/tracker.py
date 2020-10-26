@@ -34,12 +34,12 @@ class tracker:
         diff = self.get_diff(point, cm)
         print(diff)
         if(diff > 0):
-            if(diff < 5):
-                return Twist(Vector3(self.vel_trans,0,0), Vector3(0,0,self.vel_rot))
+            if(diff < 10):
+                return Twist(Vector3(self.vel_trans,0,0), Vector3(0,0,0))
             else:
                 return Twist(Vector3(0,0,0), Vector3(0,0,self.vel_rot))
         else:
-            if(diff > -5):
-                return Twist(Vector3(self.vel_trans,0,0), Vector3(0,0,-self.vel_rot))
+            if(diff > -10):
+                return Twist(Vector3(self.vel_trans,0,0), Vector3(0,0,0))
             else:
                 return Twist(Vector3(0,0,0), Vector3(0,0,-self.vel_rot))
