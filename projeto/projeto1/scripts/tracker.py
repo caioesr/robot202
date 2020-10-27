@@ -32,7 +32,6 @@ class tracker:
 
     def get_velocity(self, point, cm):
         diff = self.get_diff(point, cm)
-        print(diff)
         if(diff > 0):
             if(diff < 10):
                 return Twist(Vector3(self.vel_trans,0,0), Vector3(0,0,0))
