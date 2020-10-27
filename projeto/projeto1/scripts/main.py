@@ -106,8 +106,7 @@ def roda_todo_frame(imagem):
         tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
 
         aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
-        ids, distances = aruco_tracker.detect_id(aruco_image)
-        #print(ids, distances)
+        aruco_tracker.detect_id(aruco_image, True)
 
         cv2.imshow("cv_image", cv_image)
         cv2.waitKey(1)
@@ -135,9 +134,14 @@ if __name__=="__main__":
             # for r in resultados:
             #     print(r)
 
-            #if(center_image != None and cm_coords != None):
-            #    vel = tracker.get_velocity(center_image, cm_coords)
-            #    velocidade_saida.publish(vel)
+            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
+
+            if aruco_vel == None:
+                if(center_image != None and cm_coords != None):
+                    vel = tracker.get_velocity(center_image, cm_coords)
+                    velocidade_saida.publish(vel)
+            else:
+                velocidade_saida.publish(aruco_vel)
 
             rospy.sleep(0.01)
 
