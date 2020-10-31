@@ -25,6 +25,7 @@ from std_msgs.msg import Header
 import visao_module
 from center_mass import center_mass
 from tracker import tracker
+from aruco import ArucoTracker
 
 
 bridge = CvBridge()
@@ -41,6 +42,8 @@ v = 0.1
 w = math.pi/16
 
 tracker = tracker(v, w)
+aruco_tracker = ArucoTracker()
+
 cm_coords = None
 center_image = None
 
@@ -63,8 +66,6 @@ frame = "camera_link"
 tfl = 0
 
 tf_buffer = tf2_ros.Buffer()
-
-
 
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
@@ -103,7 +104,11 @@ def roda_todo_frame(imagem):
         cm_coords = cm.center_coords(mask)
         mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
         tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
-        cv2.imshow("cv_image", mask_bgr)
+
+        aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
+        aruco_tracker.detect_id(aruco_image, True)
+
+        cv2.imshow("cv_image", cv_image)
         cv2.waitKey(1)
     except CvBridgeError as e:
         print('ex', e)
@@ -129,9 +134,14 @@ if __name__=="__main__":
             # for r in resultados:
             #     print(r)
 
-            if(center_image != None and cm_coords != None):
-                vel = tracker.get_velocity(center_image, cm_coords)
-                velocidade_saida.publish(vel)
+            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
+
+            if aruco_vel == None:
+                if(center_image != None and cm_coords != None):
+                    vel = tracker.get_velocity(center_image, cm_coords)
+                    velocidade_saida.publish(vel)
+            else:
+                velocidade_saida.publish(aruco_vel)
 
             rospy.sleep(0.01)
 
