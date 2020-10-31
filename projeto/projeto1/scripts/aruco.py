@@ -49,8 +49,6 @@ class ArucoTracker:
                 elif ids[0] == 200 and distancesnp <= min_dist:
                     self.state = "Turn Right"
 
-        cv2.imshow("Aruco_image", frame)
-
     def get_velocity(self, w, dt):
         if self.state == "Turn Back":
             return self.turn_back(w, dt)

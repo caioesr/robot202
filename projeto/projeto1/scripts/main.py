@@ -26,6 +26,7 @@ import visao_module
 from center_mass import center_mass
 from tracker import tracker
 from aruco import ArucoTracker
+from claw import claw
 
 
 bridge = CvBridge()
@@ -38,11 +39,12 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 0.1
+v = 1
 w = math.pi/16
 
 tracker = tracker(v, w)
 aruco_tracker = ArucoTracker()
+claw = claw()
 
 cm_coords = None
 center_image = None
