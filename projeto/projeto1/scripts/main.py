@@ -39,8 +39,8 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 1
-w = math.pi/16
+v = 0.1
+w = math.pi/12
 
 tracker = tracker(v, w)
 aruco_tracker = ArucoTracker()
@@ -68,6 +68,32 @@ frame = "camera_link"
 tfl = 0
 
 tf_buffer = tf2_ros.Buffer()
+
+
+position = list()
+inside_initial_area = True
+first_movement = False
+look_for_aruco = False
+
+def odometria(data):
+    global position
+    global inside_initial_area
+    global first_movement
+    global look_for_aruco
+
+    position = [data.pose.pose.position.x, data.pose.pose.position.y]
+
+    if(not first_movement):
+        if((position[0] <= -0.5 or position[0] >= 0.5) or (position[1] <= -0.5 or position[1] >= 0.5)):
+            first_movement = True
+            inside_initial_area = False
+    
+    elif not inside_initial_area:
+        if ((position[0] >= -0.3 and position[0] <= 0.3) or (position[1] >= -0.3 and position[1] <= 0.3)):
+            look_for_aruco = True
+
+    print("Inside initial area: {0}\nFirst movement: {1}\nLooking for aruco: {2}\n".format(inside_initial_area, first_movement, look_for_aruco))
+    print("X = {0:.2f} Y = {1:.2f}".format(position[0], position[1]))
 
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
@@ -121,6 +147,8 @@ if __name__=="__main__":
     topico_imagem = "/camera/image/compressed"
 
     recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
+
+    ref_odometria = rospy.Subscriber("/odom", Odometry, odometria)
 
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
 
