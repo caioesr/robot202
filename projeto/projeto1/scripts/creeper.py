@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+# -*- coding:utf-8 -*-
 import cv2 
 import numpy as np
 
@@ -34,7 +36,7 @@ class creeper:
         except:
             return (0,0)
 
-    ef center_of_creeper_region(self, mask, x1, y1, x2, y2):
+    def center_of_creeper_region(self, mask, x1, y1, x2, y2):
         mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
         clipped = mask[y1:y2, x1:x2]
         c = self.center_coords(clipped)
