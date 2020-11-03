@@ -5,11 +5,11 @@ import numpy as np
 
 class creeper:
 
-    def __init__(self,color,high,low):
-        if self.color[0] == "blue":
+    def __init__(self,color):
+        if color[1] == "blue":
             self.low = np.array([90,50,50],dtype=np.uint8)
             self.high = np.array([100,255,255],dtype=np.uint8)
-        elif self.color[0] == "green":
+        elif color[1] == "green":
             self.low = np.array([50,50,50],dtype=np.uint8)
             self.high = np.array([60,255,255],dtype=np.uint8)
         else:
@@ -24,7 +24,7 @@ class creeper:
         mask = cv2.inRange(hsv, self.low, self.high)
         return mask
 
-    def center_coords(self, mask):
+    def creeper_coords(self, mask):
         """
         Retorna uma tupla (x,y) com o centro de massa da mascara
         """
