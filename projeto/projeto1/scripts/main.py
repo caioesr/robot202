@@ -89,10 +89,10 @@ def odometria(data):
             inside_initial_area = False
     
     elif not inside_initial_area:
-        if ((position[0] >= -0.3 and position[0] <= 0.3) or (position[1] >= -0.3 and position[1] <= 0.3)):
+        if ((position[0] >= -0.25 and position[0] <= 0.25) and (position[1] >= -0.25 and position[1] <= 0.25)):
             look_for_aruco = True
 
-    print("Inside initial area: {0}\nFirst movement: {1}\nLooking for aruco: {2}\n".format(inside_initial_area, first_movement, look_for_aruco))
+    print("Inside initial area: {0}\nFirst movement: {1}\nLooking for aruco: {2}".format(inside_initial_area, first_movement, look_for_aruco))
     print("X = {0:.2f} Y = {1:.2f}".format(position[0], position[1]))
 
 # A função a seguir é chamada sempre que chega um novo frame
@@ -166,12 +166,23 @@ if __name__=="__main__":
 
             aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
 
-            if aruco_vel == None:
-                if(center_image != None and cm_coords != None):
-                    vel = tracker.get_velocity(center_image, cm_coords)
-                    velocidade_saida.publish(vel)
+            if not look_for_aruco:
+                if aruco_vel == None:
+                    if(center_image != None and cm_coords != None):
+                        vel = tracker.get_velocity(center_image, cm_coords)
+                        velocidade_saida.publish(vel)
+                else:
+                    velocidade_saida.publish(aruco_vel)
+            
             else:
-                velocidade_saida.publish(aruco_vel)
+                if aruco_vel == None:
+                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, math.pi / 8))
+                    velocidade_saida.publish(vel)
+                else:
+                    velocidade_saida.publish(aruco_vel)
+                    if(aruco_tracker.state == "Idle"):
+                        first_movement = False
+                        look_for_aruco = False
 
             rospy.sleep(0.01)
 
