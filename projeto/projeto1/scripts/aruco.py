@@ -23,6 +23,7 @@ class ArucoTracker:
     def __init__(self):
         self.total_ang = 0
         self.state = "Idle"
+        self.done_turning = False
 
     def detect_id(self, frame, treat_ids):
         distancesnp = None
@@ -65,11 +66,13 @@ class ArucoTracker:
             return Twist(Vector3(0, 0, 0), Vector3(0, 0, w))
         else:
             self.total_ang = 0
-            self.state = "Idle"    
+            self.state = "Idle"
+
     def turn_right(self, w, dt):
-        if self.total_ang < math.pi / 2:
+        if self.total_ang < math.pi / 4:
             self.total_ang += w * dt
             return Twist(Vector3(0, 0, 0), Vector3(0, 0, -w))
         else:
             self.total_ang = 0
             self.state = "Idle"
+            self.done_turning = True

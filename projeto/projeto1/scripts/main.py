@@ -39,7 +39,7 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 0.1
+v = 0.5
 w = math.pi/12
 
 tracker = tracker(v, w)
@@ -80,17 +80,19 @@ def odometria(data):
     global inside_initial_area
     global first_movement
     global look_for_aruco
+    global aruco_tracker
 
     position = [data.pose.pose.position.x, data.pose.pose.position.y]
 
-    if(not first_movement):
-        if((position[0] <= -0.5 or position[0] >= 0.5) or (position[1] <= -0.5 or position[1] >= 0.5)):
-            first_movement = True
-            inside_initial_area = False
-    
-    elif not inside_initial_area:
-        if ((position[0] >= -0.25 and position[0] <= 0.25) and (position[1] >= -0.25 and position[1] <= 0.25)):
-            look_for_aruco = True
+    if not aruco_tracker.done_turning:
+        if(not first_movement):
+            if((position[0] <= -0.5 or position[0] >= 0.5) or (position[1] <= -0.5 or position[1] >= 0.5)):
+                first_movement = True
+                inside_initial_area = False
+        
+        elif not inside_initial_area:
+            if ((position[0] >= -0.25 and position[0] <= 0.25) and (position[1] >= -0.25 and position[1] <= 0.25)):
+                look_for_aruco = True
 
     print("Inside initial area: {0}\nFirst movement: {1}\nLooking for aruco: {2}".format(inside_initial_area, first_movement, look_for_aruco))
     print("X = {0:.2f} Y = {1:.2f}".format(position[0], position[1]))
@@ -164,7 +166,7 @@ if __name__=="__main__":
             # for r in resultados:
             #     print(r)
 
-            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
+            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.05)
 
             if not look_for_aruco:
                 if aruco_vel == None:
@@ -180,11 +182,10 @@ if __name__=="__main__":
                     velocidade_saida.publish(vel)
                 else:
                     velocidade_saida.publish(aruco_vel)
-                    if(aruco_tracker.state == "Idle"):
-                        first_movement = False
-                        look_for_aruco = False
+                    first_movement = not aruco_tracker.done_turning
+                    look_for_aruco = not aruco_tracker.done_turning
 
-            rospy.sleep(0.01)
+            rospy.sleep(0.05)
 
             stop_vel = Twist(Vector3(0, 0, 0), Vector3(0, 0 ,0))
             velocidade_saida.publish(stop_vel)
