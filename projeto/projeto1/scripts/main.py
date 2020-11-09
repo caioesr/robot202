@@ -43,6 +43,8 @@ high = np.array([36, 255, 255],dtype=np.uint8)
 v = 0.5
 w = math.pi/12
 
+posto_vel = None
+
 tracker = tracker(v, w)
 aruco_tracker = ArucoTracker()
 claw = claw()
@@ -136,9 +138,9 @@ if __name__=="__main__":
     try:
         
         while not rospy.is_shutdown():
-            posto = posto(resultados, 'bird', v, w, claw)
-            if cv_image != None:
-                posto_vel = posto.get_velocity(cv_image)
+            post = posto(resultados, 'bird', v, w, claw)
+            if type(cv_image) != None:
+                posto_vel = post.get_velocity(cv_image)
 
             aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
 
