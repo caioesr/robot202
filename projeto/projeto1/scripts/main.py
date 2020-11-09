@@ -103,14 +103,14 @@ def roda_todo_frame(imagem):
         cv_image = saida_net.copy()
         center_image = tracker.get_center(cv_image)
         cm = center_mass(low, high)
-        crm = creeper_(inputlist)
+        crm = creeper(inputlist)
         if crm == None: 
             mask = cm.filter_color(cv_image)
             cm_coords = cm.center_coords(mask)
             mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
             tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
         else:
-            mask= filtra_creeper(cv_image)
+            mask= crm.filtra_creeper(cv_image)
             creeper_coords=crm.creeper_coords(mask)
             mask_bgr = crm.center_of_creeper_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
             tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
