@@ -25,13 +25,14 @@ from std_msgs.msg import Header
 import visao_module
 from center_mass import center_mass
 from tracker import tracker
+from creeper import creeper
 from aruco import ArucoTracker
 from claw import claw
-
-
+inputlist = ["42069","blue","cat"]
 bridge = CvBridge()
 
 cv_image = None
+crm= None
 media = []
 centro = []
 atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
@@ -102,10 +103,18 @@ def roda_todo_frame(imagem):
         cv_image = saida_net.copy()
         center_image = tracker.get_center(cv_image)
         cm = center_mass(low, high)
-        mask = cm.filter_color(cv_image)
-        cm_coords = cm.center_coords(mask)
-        mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
-        tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
+        crm = creeper_(inputlist)
+        if crm == None: 
+            mask = cm.filter_color(cv_image)
+            cm_coords = cm.center_coords(mask)
+            mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+            tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
+        else:
+            mask= filtra_creeper(cv_image)
+            creeper_coords=crm.creeper_coords(mask)
+            mask_bgr = crm.center_of_creeper_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+            tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
+
 
         aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
         aruco_tracker.detect_id(aruco_image, True)
