@@ -27,6 +27,7 @@ from center_mass import center_mass
 from tracker import tracker
 from aruco import ArucoTracker
 from claw import claw
+from posto import posto
 
 
 bridge = CvBridge()
@@ -39,8 +40,8 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 1
-w = math.pi/16
+v = 0.5
+w = math.pi/12
 
 tracker = tracker(v, w)
 aruco_tracker = ArucoTracker()
@@ -77,6 +78,7 @@ def roda_todo_frame(imagem):
     global resultados
     global cm_coords
     global center_image
+    global claw
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
@@ -100,13 +102,14 @@ def roda_todo_frame(imagem):
         depois = time.clock()
         # Desnecessário - Hough e MobileNet já abrem janelas
         cv_image = saida_net.copy()
+
         center_image = tracker.get_center(cv_image)
         cm = center_mass(low, high)
         mask = cm.filter_color(cv_image)
         cm_coords = cm.center_coords(mask)
         mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
         tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
-
+            
         aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
         aruco_tracker.detect_id(aruco_image, True)
 
@@ -133,17 +136,21 @@ if __name__=="__main__":
     try:
         
         while not rospy.is_shutdown():
-            # for r in resultados:
-            #     print(r)
+            posto = posto(resultados, 'bird', v, w, claw)
+            if cv_image != None:
+                posto_vel = posto.get_velocity(cv_image)
 
             aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
 
-            if aruco_vel == None:
-                if(center_image != None and cm_coords != None):
-                    vel = tracker.get_velocity(center_image, cm_coords)
-                    velocidade_saida.publish(vel)
+            if posto_vel == None:
+                if aruco_vel == None:
+                    if(center_image != None and cm_coords != None):
+                        vel = tracker.get_velocity(center_image, cm_coords)
+                        velocidade_saida.publish(vel)
+                else:
+                    velocidade_saida.publish(aruco_vel)
             else:
-                velocidade_saida.publish(aruco_vel)
+                velocidade_saida.publish(posto_vel)
 
             rospy.sleep(0.01)
 

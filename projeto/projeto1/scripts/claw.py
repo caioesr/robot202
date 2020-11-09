@@ -19,6 +19,9 @@ class claw:
         self.claw_state = 0
         self.time = 1
 
+    def get_arm_state(self):
+        return self.arm_state
+
     def up_arm(self):
         arm_state = Float64()
         if(self.arm_state <= 0):
