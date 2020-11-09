@@ -104,17 +104,18 @@ def roda_todo_frame(imagem):
         center_image = tracker.get_center(cv_image)
         cm = center_mass(low, high)
         crm = creeper(inputlist)
-        if crm == None: 
-            mask = cm.filter_color(cv_image)
-            cm_coords = cm.center_coords(mask)
-            mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
-            tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
-        else:
-            mask= crm.filtra_creeper(cv_image)
-            creeper_coords=crm.creeper_coords(mask)
-            mask_bgr = crm.center_of_creeper_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
-            tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
+        #cria a mascara e area da mascara para o centro de massa
+        mask_cm = cm.filter_color(cv_image)
+        cm_coords = cm.center_coords(mask_cm)
+        mask_bgr = cm.center_of_mass_region(mask_cm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+        tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
+        #cria a mascara e area da mascara para o creeper
+        mask_crm= crm.filtra_creeper(cv_image)
+        creeper_coords=crm.creeper_coords(mask_crm)
+        #mask_bgr = crm.center_of_creeper_region(mask_crm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+        tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
 
+        cv2.imshow("Mascara",mask_bgr)
 
         aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
         aruco_tracker.detect_id(aruco_image, True)

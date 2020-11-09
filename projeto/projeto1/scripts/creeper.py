@@ -39,11 +39,10 @@ class creeper:
     def center_of_creeper_region(self, mask, x1, y1, x2, y2):
         mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
         clipped = mask[y1:y2, x1:x2]
-        c = self.center_coords(clipped)
+        c = self.creeper_coords(clipped)
         c = list(c)
         c[0] += x1
         c[1] += y1
         c = tuple(c)
-        self.crosshair(mask_bgr, c, 10, (0,0,255))
         cv2.rectangle(mask_bgr, (x1, y1), (x2, y2), (255,0,0),2,cv2.LINE_AA)
         return mask_bgr
