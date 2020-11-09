@@ -46,3 +46,6 @@ class posto:
                 else:
                     return Twist(Vector3(0,0,0), Vector3(0,0,-self.vel_rot))
         return None
+
+    def turn_back(self):
+        pass

@@ -51,6 +51,7 @@ claw = claw()
 
 cm_coords = None
 center_image = None
+distance = None
 
 area = 0.0 # Variavel com a area do maior contorno
 
@@ -119,6 +120,12 @@ def roda_todo_frame(imagem):
         cv2.waitKey(1)
     except CvBridgeError as e:
         print('ex', e)
+
+def scanner(dado):
+    global distance
+
+    dado = list(np.array(dado.ranges))
+    distance = dado[0]
     
 if __name__=="__main__":
     rospy.init_node("cor")
@@ -128,6 +135,7 @@ if __name__=="__main__":
     recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
 
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
+    recebe_scan = rospy.Subscriber("/scan", LaserScan, check_creeper)
 
     tfl = tf2_ros.TransformListener(tf_buffer) #conversao do sistema de coordenadas 
     tolerancia = 25
@@ -152,7 +160,10 @@ if __name__=="__main__":
                 else:
                     velocidade_saida.publish(aruco_vel)
             else:
-                velocidade_saida.publish(posto_vel)
+                if distance >= 0.3:
+                    velocidade_saida.publish(posto_vel)
+                else:
+                    claw.switch_claw_state()
 
             rospy.sleep(0.01)
 
