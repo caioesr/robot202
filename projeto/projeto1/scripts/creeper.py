@@ -18,8 +18,6 @@ class creeper:
 
     
     def filtra_creeper(self,bgr):
-
-
         hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.low, self.high)
         return mask

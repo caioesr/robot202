@@ -47,6 +47,7 @@ tracker = tracker(v, w)
 aruco_tracker = ArucoTracker()
 claw = claw()
 
+creeper_coords = None
 cm_coords = None
 center_image = None
 
@@ -78,6 +79,7 @@ def roda_todo_frame(imagem):
     global resultados
     global cm_coords
     global center_image
+    global creeper_coords
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
@@ -107,15 +109,15 @@ def roda_todo_frame(imagem):
         #cria a mascara e area da mascara para o centro de massa
         mask_cm = cm.filter_color(cv_image)
         cm_coords = cm.center_coords(mask_cm)
-        mask_bgr = cm.center_of_mass_region(mask_cm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
-        tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
+        mask_bgr_cm = cm.center_of_mass_region(mask_cm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+        tracker.crosshair(mask_bgr_cm, center_image, 10, (0,255,0))
         #cria a mascara e area da mascara para o creeper
         mask_crm= crm.filtra_creeper(cv_image)
         creeper_coords=crm.creeper_coords(mask_crm)
-        #mask_bgr = crm.center_of_creeper_region(mask_crm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
-        tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
+        mask_bgr_crm = crm.center_of_creeper_region(mask_crm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
 
-        cv2.imshow("Mascara",mask_bgr)
+        cv2.imshow("Mascara_crm",mask_bgr_crm)
+        cv2.imshow("Mascara_cm",mask_bgr_cm)
 
         aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
         aruco_tracker.detect_id(aruco_image, True)
@@ -135,7 +137,7 @@ if __name__=="__main__":
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
 
     tfl = tf2_ros.TransformListener(tf_buffer) #conversao do sistema de coordenadas 
-    tolerancia = 25
+    tolerancia = 25 
 
     # Exemplo de categoria de resultados
     # [('chair', 86.965459585189819, (90, 141), (177, 265))]
@@ -149,7 +151,11 @@ if __name__=="__main__":
             aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
 
             if aruco_vel == None:
-                if(center_image != None and cm_coords != None):
+                if(center_image != None and creeper_coords != None):
+                    vel = tracker.get_velocity(center_image,creeper_coords)
+                    velocidade_saida.publish(vel)
+
+                elif(center_image != None and cm_coords != None):
                     vel = tracker.get_velocity(center_image, cm_coords)
                     velocidade_saida.publish(vel)
             else:
