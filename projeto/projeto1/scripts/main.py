@@ -94,8 +94,8 @@ def odometria(data):
             if ((position[0] >= -0.25 and position[0] <= 0.25) and (position[1] >= -0.25 and position[1] <= 0.25)):
                 look_for_aruco = True
 
-    print("Inside initial area: {0}\nFirst movement: {1}\nLooking for aruco: {2}".format(inside_initial_area, first_movement, look_for_aruco))
-    print("X = {0:.2f} Y = {1:.2f}".format(position[0], position[1]))
+    #print("Inside initial area: {0}\nFirst movement: {1}\nLooking for aruco: {2}".format(inside_initial_area, first_movement, look_for_aruco))
+    #print("X = {0:.2f} Y = {1:.2f}".format(position[0], position[1]))
 
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
@@ -131,14 +131,13 @@ def roda_todo_frame(imagem):
         center_image = tracker.get_center(cv_image)
         cm = center_mass(low, high)
         mask = cm.filter_color(cv_image)
-        cm_coords = cm.center_coords(mask)
-        mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+        cm_coords, mask_bgr = cm.center_of_mass_region(mask, 0, 150, cv_image.shape[1], cv_image.shape[0])
         tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
 
         aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
         aruco_tracker.detect_id(aruco_image, True)
 
-        cv2.imshow("cv_image", cv_image)
+        cv2.imshow("cv_image", mask_bgr)
         cv2.waitKey(1)
     except CvBridgeError as e:
         print('ex', e)
@@ -166,6 +165,7 @@ if __name__=="__main__":
             # for r in resultados:
             #     print(r)
 
+            vel = None
             aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.05)
 
             if not look_for_aruco:
@@ -187,6 +187,7 @@ if __name__=="__main__":
 
             rospy.sleep(0.05)
 
+            print(look_for_aruco)
             stop_vel = Twist(Vector3(0, 0, 0), Vector3(0, 0 ,0))
             velocidade_saida.publish(stop_vel)
 

@@ -44,8 +44,6 @@ class ArucoTracker:
 
             if treat_ids:
 
-                print(distancesnp)
-
                 if (ids[0] == 50 or ids[0] == 100 or ids[0] == 150) and distancesnp <= min_dist:
                     self.state = "Turn Back"
                 elif ids[0] == 200 and distancesnp <= 250:
