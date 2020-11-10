@@ -111,8 +111,8 @@ def roda_todo_frame(imagem):
         cm_coords,mask_bgr_cm = cm.center_of_mass_region(mask_cm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
         tracker.crosshair(mask_bgr_cm, center_image, 10, (0,255,0))
         #cria a mascara e area da mascara para o creeper
-        mask_crm= crm.filtra_creeper(cv_image)       
-        creeper_coords,mask_bgr_crm = crm.center_of_creeper_region(mask_crm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+        mask_crm= crm.filtra_creeper(cv_image)
+        creeper_coords,mask_bgr_crm = crm.center_of_creeper_region(mask_crm, 0, 150, cv_image.shape[1] - 100, cv_image.shape[0])
 
         cv2.imshow("Mascara_crm",mask_bgr_crm)
         cv2.imshow("Mascara_cm",mask_bgr_cm)
@@ -149,7 +149,7 @@ if __name__=="__main__":
             aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
 
             if aruco_vel == None:
-                if(center_image != None and creeper_coords[0] != 0 and creeper_coords[1] != 0):
+                if(center_image != None and creeper_coords[0] != 0 and creeper_coords[1] !=0):
                     vel = tracker.get_velocity(center_image,creeper_coords)
                     velocidade_saida.publish(vel)
 
