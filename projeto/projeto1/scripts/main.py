@@ -47,7 +47,7 @@ tracker = tracker(v, w)
 aruco_tracker = ArucoTracker()
 claw = claw()
 
-creeper_coords = None
+creeper_coords = (0,0)
 cm_coords = None
 center_image = None
 
