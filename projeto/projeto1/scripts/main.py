@@ -40,8 +40,8 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 1
-w = math.pi/16
+v = 0.1
+w = math.pi/12
 
 tracker = tracker(v, w)
 aruco_tracker = ArucoTracker()
@@ -108,11 +108,11 @@ def roda_todo_frame(imagem):
         crm = creeper(inputlist)
         #cria a mascara e area da mascara para o centro de massa
         mask_cm = cm.filter_color(cv_image)
-        cm_coords,mask_bgr_cm = cm.center_of_mass_region(mask_cm, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+        cm_coords,mask_bgr_cm = cm.center_of_mass_region(mask_cm, 0, 175, cv_image.shape[1], cv_image.shape[0])
         tracker.crosshair(mask_bgr_cm, center_image, 10, (0,255,0))
         #cria a mascara e area da mascara para o creeper
         mask_crm= crm.filtra_creeper(cv_image)
-        creeper_coords,mask_bgr_crm = crm.center_of_creeper_region(mask_crm, 0, 150, cv_image.shape[1] - 100, cv_image.shape[0])
+        creeper_coords,mask_bgr_crm = crm.center_of_creeper_region(mask_crm, 0, 150, cv_image.shape[1], cv_image.shape[0])
 
         cv2.imshow("Mascara_crm",mask_bgr_crm)
         cv2.imshow("Mascara_cm",mask_bgr_cm)
@@ -146,7 +146,7 @@ if __name__=="__main__":
             # for r in resultados:
             #     print(r)
 
-            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
+            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.06)
 
             if aruco_vel == None:
                 if(center_image != None and creeper_coords[0] != 0 and creeper_coords[1] !=0):
@@ -159,10 +159,12 @@ if __name__=="__main__":
             else:
                 velocidade_saida.publish(aruco_vel)
 
-            rospy.sleep(0.01)
+            rospy.sleep(0.05)
 
             stop_vel = Twist(Vector3(0, 0, 0), Vector3(0, 0 ,0))
             velocidade_saida.publish(stop_vel)
+
+            rospy.sleep(0.01)
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")

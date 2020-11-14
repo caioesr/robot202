@@ -7,8 +7,8 @@ class creeper:
 
     def __init__(self,color):
         if color[1] == "blue":
-            self.low = np.array([90,50,50],dtype=np.uint8)
-            self.high = np.array([100,255,255],dtype=np.uint8)
+            self.low = np.array([110,  50,  50],dtype=np.uint8)
+            self.high = np.array([120, 255, 255],dtype=np.uint8)
         elif color[1] == "green":
             self.low = np.array([50,50,50],dtype=np.uint8)
             self.high = np.array([60,255,255],dtype=np.uint8)
