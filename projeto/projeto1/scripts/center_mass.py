@@ -46,5 +46,5 @@ class center_mass:
         c[1] += y1
         c = tuple(c)
         self.crosshair(mask_bgr, c, 10, (0,0,255))
-        cv2.rectangle(mask_bgr, (x1, y1), (x2, y2), (255,0,0),2,cv2.LINE_AA)
+        cv2.rectangle(mask_bgr, (x1, y1), (x2, y2), (0,255,0),2,cv2.LINE_AA)
         return c, mask_bgr

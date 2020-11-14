@@ -20,10 +20,13 @@ camera_matrix   = np.loadtxt(calib_path+'cameraMatrix_raspi.txt', delimiter=',')
 camera_distortion   = np.loadtxt(calib_path+'cameraDistortion_raspi.txt', delimiter=',')
 
 class ArucoTracker:
-    def __init__(self):
+    def __init__(self, target_id):
         self.total_ang = 0
         self.state = "Idle"
         self.done_turning = False
+        self.id_detected = None
+        self.elapsed_time = 0
+        self.target_id = target_id
 
     def detect_id(self, frame, treat_ids):
         distancesnp = None
@@ -35,6 +38,11 @@ class ArucoTracker:
         if ids is not None:
 
             aruco.drawDetectedMarkers(frame, corners, ids)
+
+            if(self.target_id in ids):
+                self.id_detected = True
+            else:
+                self.id_detected = False
 
             ret = aruco.estimatePoseSingleMarkers(corners, 25, camera_matrix, camera_distortion)
 
@@ -49,6 +57,7 @@ class ArucoTracker:
                 elif ids[0] == 200 and distancesnp <= 250:
                     self.state = "Turn Right"
         cv2.imshow("Aruco_Image", frame)
+        self.elapsed_time += 0.03
 
     def get_velocity(self, w, dt):
         if self.state == "Turn Back":
@@ -67,7 +76,7 @@ class ArucoTracker:
             self.state = "Idle"
 
     def turn_right(self, w, dt):
-        if self.total_ang < math.pi / 4:
+        if self.total_ang < math.pi / 2:
             self.total_ang += w * dt
             return Twist(Vector3(0, 0, 0), Vector3(0, 0, -w))
         else:

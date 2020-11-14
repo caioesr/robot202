@@ -21,15 +21,15 @@ from geometry_msgs.msg import Twist, Vector3, Pose, Vector3Stamped
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
 
-
 import visao_module
 from center_mass import center_mass
 from tracker import tracker
 from aruco import ArucoTracker
 from claw import claw
 
-
 bridge = CvBridge()
+
+goal = ("orange", 11, "cat")
 
 cv_image = None
 media = []
@@ -39,14 +39,15 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 0.12
+v = 0.2
 w = math.pi/12
 
 tracker = tracker(v, w)
-aruco_tracker = ArucoTracker()
+aruco_tracker = ArucoTracker(goal[1])
 claw = claw()
 
 cm_coords = None
+cm_coords_creeper = None
 center_image = None
 
 area = 0.0 # Variavel com a area do maior contorno
@@ -73,7 +74,17 @@ tf_buffer = tf2_ros.Buffer()
 position = list()
 inside_initial_area = True
 first_movement = False
-look_for_aruco = False
+look_for_aruco = None
+
+cm = center_mass(low, high)
+
+if(goal[0] == "blue"):
+    cm_creeper = center_mass(np.array([110, 50, 50], dtype=np.uint8), np.array([120, 255, 255],dtype=np.uint8))
+elif(goal[0] == "orange"):
+    cm_creeper = center_mass(np.array([0, 50, 50], dtype=np.uint8), np.array([10, 255, 255], dtype=np.uint8))
+elif(goal[0] == "pink"):
+    cm_creeper = center_mass(np.array([156,  50,  50], dtype=np.uint8), np.array([166, 255, 255], dtype=np.uint8))
+
 
 def odometria(data):
     global position
@@ -84,7 +95,7 @@ def odometria(data):
 
     position = [data.pose.pose.position.x, data.pose.pose.position.y]
 
-    if not aruco_tracker.done_turning:
+    if aruco_tracker.done_turning == False:
         if(not first_movement):
             if((position[0] <= -0.5 or position[0] >= 0.5) or (position[1] <= -0.5 or position[1] >= 0.5)):
                 first_movement = True
@@ -104,7 +115,10 @@ def roda_todo_frame(imagem):
     global centro
     global resultados
     global cm_coords
+    global cm_coords_creeper
     global center_image
+    global cm
+    global cm_creeper
 
     now = rospy.get_rostime()
     imgtime = imagem.header.stamp
@@ -129,15 +143,22 @@ def roda_todo_frame(imagem):
         # Desnecessário - Hough e MobileNet já abrem janelas
         cv_image = saida_net.copy()
         center_image = tracker.get_center(cv_image)
-        cm = center_mass(low, high)
         mask = cm.filter_color(cv_image)
-        cm_coords, mask_bgr = cm.center_of_mass_region(mask, 0, 150, cv_image.shape[1], cv_image.shape[0])
+        mask = cv2.blur(mask, (5, 5))
+        cm_coords, mask_bgr = cm.center_of_mass_region(mask, 0, 160, cv_image.shape[1], cv_image.shape[0])
         tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
+
+        mask_creeper = cm_creeper.filter_color(cv_image)
+        mask_creeper = cv2.blur(mask_creeper, (5, 5))
+        cm_coords_creeper, mask_bgr_creeper = cm_creeper.center_of_mass_region(mask_creeper, 0, 0, cv_image.shape[1], cv_image.shape[0])
+        tracker.crosshair(mask_bgr_creeper, center_image, 10, (0,255,0))
 
         aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
         aruco_tracker.detect_id(aruco_image, True)
 
         cv2.imshow("cv_image", mask_bgr)
+        cv2.imshow("cv_image_creeper", mask_bgr_creeper)
+
         cv2.waitKey(1)
     except CvBridgeError as e:
         print('ex', e)
@@ -166,12 +187,15 @@ if __name__=="__main__":
             #     print(r)
 
             vel = None
-            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.02)
+            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
 
             if not look_for_aruco:
                 if aruco_vel == None:
-                    if(center_image != None and cm_coords != None):
-                        vel = tracker.get_velocity(center_image, cm_coords)
+                    if(center_image != None and cm_coords != None and cm_coords_creeper != None):
+                        if(cm_coords_creeper[0] != 0 and cm_coords_creeper[1] != 0 and aruco_tracker.id_detected):
+                            vel = tracker.get_velocity(center_image, cm_coords_creeper)
+                        else:
+                            vel = tracker.get_velocity(center_image, cm_coords)
                         velocidade_saida.publish(vel)
                 else:
                     velocidade_saida.publish(aruco_vel)
@@ -182,12 +206,10 @@ if __name__=="__main__":
                     velocidade_saida.publish(vel)
                 else:
                     velocidade_saida.publish(aruco_vel)
-                    first_movement = not aruco_tracker.done_turning
                     look_for_aruco = not aruco_tracker.done_turning
 
             rospy.sleep(0.01)
 
-            print(look_for_aruco)
             stop_vel = Twist(Vector3(0, 0, 0), Vector3(0, 0 ,0))
             velocidade_saida.publish(stop_vel)
 
