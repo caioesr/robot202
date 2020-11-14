@@ -39,7 +39,7 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 0.5
+v = 0.12
 w = math.pi/12
 
 tracker = tracker(v, w)
@@ -166,7 +166,7 @@ if __name__=="__main__":
             #     print(r)
 
             vel = None
-            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.05)
+            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.02)
 
             if not look_for_aruco:
                 if aruco_vel == None:
@@ -185,11 +185,13 @@ if __name__=="__main__":
                     first_movement = not aruco_tracker.done_turning
                     look_for_aruco = not aruco_tracker.done_turning
 
-            rospy.sleep(0.05)
+            rospy.sleep(0.01)
 
             print(look_for_aruco)
             stop_vel = Twist(Vector3(0, 0, 0), Vector3(0, 0 ,0))
             velocidade_saida.publish(stop_vel)
+
+            rospy.sleep(0.01)
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
