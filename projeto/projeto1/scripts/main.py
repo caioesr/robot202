@@ -39,8 +39,8 @@ atraso = 1.5E9 # 1 segundo e meio. Em nanossegundos
 low = np.array([22, 50, 50],dtype=np.uint8)
 high = np.array([36, 255, 255],dtype=np.uint8)
 
-v = 1
-w = math.pi/16
+v = 0.5
+w = math.pi/12
 
 tracker = tracker(v, w)
 aruco_tracker = ArucoTracker()
@@ -68,6 +68,34 @@ frame = "camera_link"
 tfl = 0
 
 tf_buffer = tf2_ros.Buffer()
+
+
+position = list()
+inside_initial_area = True
+first_movement = False
+look_for_aruco = False
+
+def odometria(data):
+    global position
+    global inside_initial_area
+    global first_movement
+    global look_for_aruco
+    global aruco_tracker
+
+    position = [data.pose.pose.position.x, data.pose.pose.position.y]
+
+    if not aruco_tracker.done_turning:
+        if(not first_movement):
+            if((position[0] <= -0.5 or position[0] >= 0.5) or (position[1] <= -0.5 or position[1] >= 0.5)):
+                first_movement = True
+                inside_initial_area = False
+        
+        elif not inside_initial_area:
+            if ((position[0] >= -0.25 and position[0] <= 0.25) and (position[1] >= -0.25 and position[1] <= 0.25)):
+                look_for_aruco = True
+
+    #print("Inside initial area: {0}\nFirst movement: {1}\nLooking for aruco: {2}".format(inside_initial_area, first_movement, look_for_aruco))
+    #print("X = {0:.2f} Y = {1:.2f}".format(position[0], position[1]))
 
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
@@ -103,14 +131,13 @@ def roda_todo_frame(imagem):
         center_image = tracker.get_center(cv_image)
         cm = center_mass(low, high)
         mask = cm.filter_color(cv_image)
-        cm_coords = cm.center_coords(mask)
-        mask_bgr = cm.center_of_mass_region(mask, 100, 175, cv_image.shape[1] - 100, cv_image.shape[0])
+        cm_coords, mask_bgr = cm.center_of_mass_region(mask, 0, 150, cv_image.shape[1], cv_image.shape[0])
         tracker.crosshair(mask_bgr, center_image, 10, (0,255,0))
 
         aruco_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
         aruco_tracker.detect_id(aruco_image, True)
 
-        cv2.imshow("cv_image", cv_image)
+        cv2.imshow("cv_image", mask_bgr)
         cv2.waitKey(1)
     except CvBridgeError as e:
         print('ex', e)
@@ -121,6 +148,8 @@ if __name__=="__main__":
     topico_imagem = "/camera/image/compressed"
 
     recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
+
+    ref_odometria = rospy.Subscriber("/odom", Odometry, odometria)
 
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 1)
 
@@ -136,17 +165,29 @@ if __name__=="__main__":
             # for r in resultados:
             #     print(r)
 
-            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.01)
+            vel = None
+            aruco_vel = aruco_tracker.get_velocity(math.pi / 8, 0.05)
 
-            if aruco_vel == None:
-                if(center_image != None and cm_coords != None):
-                    vel = tracker.get_velocity(center_image, cm_coords)
-                    velocidade_saida.publish(vel)
+            if not look_for_aruco:
+                if aruco_vel == None:
+                    if(center_image != None and cm_coords != None):
+                        vel = tracker.get_velocity(center_image, cm_coords)
+                        velocidade_saida.publish(vel)
+                else:
+                    velocidade_saida.publish(aruco_vel)
+            
             else:
-                velocidade_saida.publish(aruco_vel)
+                if aruco_vel == None:
+                    vel = Twist(Vector3(0, 0, 0), Vector3(0, 0, math.pi / 8))
+                    velocidade_saida.publish(vel)
+                else:
+                    velocidade_saida.publish(aruco_vel)
+                    first_movement = not aruco_tracker.done_turning
+                    look_for_aruco = not aruco_tracker.done_turning
 
-            rospy.sleep(0.01)
+            rospy.sleep(0.05)
 
+            print(look_for_aruco)
             stop_vel = Twist(Vector3(0, 0, 0), Vector3(0, 0 ,0))
             velocidade_saida.publish(stop_vel)
 

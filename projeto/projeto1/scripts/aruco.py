@@ -23,12 +23,12 @@ class ArucoTracker:
     def __init__(self):
         self.total_ang = 0
         self.state = "Idle"
+        self.done_turning = False
 
     def detect_id(self, frame, treat_ids):
         distancesnp = None
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.blur(gray, (5, 5))
 
         corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters = parameters)
 
@@ -46,8 +46,9 @@ class ArucoTracker:
 
                 if (ids[0] == 50 or ids[0] == 100 or ids[0] == 150) and distancesnp <= min_dist:
                     self.state = "Turn Back"
-                elif ids[0] == 200 and distancesnp <= min_dist:
+                elif ids[0] == 200 and distancesnp <= 250:
                     self.state = "Turn Right"
+        cv2.imshow("Aruco_Image", frame)
 
     def get_velocity(self, w, dt):
         if self.state == "Turn Back":
@@ -63,7 +64,8 @@ class ArucoTracker:
             return Twist(Vector3(0, 0, 0), Vector3(0, 0, w))
         else:
             self.total_ang = 0
-            self.state = "Idle"    
+            self.state = "Idle"
+
     def turn_right(self, w, dt):
         if self.total_ang < math.pi / 4:
             self.total_ang += w * dt
@@ -71,3 +73,4 @@ class ArucoTracker:
         else:
             self.total_ang = 0
             self.state = "Idle"
+            self.done_turning = True
