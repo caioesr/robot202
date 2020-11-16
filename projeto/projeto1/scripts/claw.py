@@ -43,9 +43,18 @@ class claw:
         self.arm_publisher.publish(arm_state)
         time.sleep(self.time)
 
-    def switch_claw_state(self):
+    def open_claw(self):
         claw_state = Float64()
-        claw_state.data = abs(1 - self.claw_state)
+        self.claw_state = -1
+        claw_state.data = self.claw_state
+
+        self.claw_publisher.publish(claw_state)
+        time.sleep(self.time)
+
+    def close_claw(self):
+        claw_state = Float64()
+        self.claw_state = 0
+        claw_state.data = self.claw_state
 
         self.claw_publisher.publish(claw_state)
         time.sleep(self.time)

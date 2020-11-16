@@ -213,7 +213,13 @@ if __name__=="__main__":
             stop_vel = Twist(Vector3(0, 0, 0), Vector3(0, 0 ,0))
             velocidade_saida.publish(stop_vel)
 
-            rospy.sleep(0.01)
+            # claw.up_arm()
+            # rospy.sleep(2)
+            # claw.open_claw()
+            # rospy.sleep(2)
+            # claw.close_claw()
+            # rospy.sleep(2)
+            # claw.down_arm()
 
     except rospy.ROSInterruptException:
         print("Ocorreu uma exceção com o rospy")
